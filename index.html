@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Agenda Pro - Tu Agenda Virtual</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-dark:#071029;
+    --panel-dark:#0f1b2b;
+    --accent:#5563DE;
+    --accent-2:#00c853;
+    --glass: rgba(255,255,255,0.06);
+    --card: #ffffff;
+    --muted:#6b7280;
+  }
+  *{box-sizing:border-box;font-family:'Poppins',sans-serif}
+  body{margin:0; background:linear-gradient(135deg,#eaf2ff,#ffffff); color:#0b1220; transition:background .4s,color .4s; min-height:100vh}
+  .dark{background: linear-gradient(135deg,var(--bg-dark), #071a2b); color:#e6eefc}
+
+  /* ==== PORTADA ==== */
+  .view {  display:flex; align-items:center; justify-content:center; padding:30px }
+  .portada {
+    width:100%; max-width:1100px; border-radius:20px; overflow:hidden; position:relative;
+    display:flex; gap:30px; align-items:center; justify-content:space-between;
+    background: url("fondo_portada2.jpg") center/cover no-repeat;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .portada::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(7,10,20,0.28), rgba(0,0,0,0.4)); }
+  .portada-left, .portada-right{position:relative; z-index:2; padding:48px}
+  .portada-left h1{font-size:42px; color:#fff; margin-bottom:8px; text-shadow:0 8px 30px rgba(0,0,0,0.5)}
+  .portada-left p{color:rgba(255,255,255,0.92); margin-bottom:22px; max-width:520px}
+  .cta {display:flex; gap:14px; align-items:center}
+  .btn-main{background:linear-gradient(90deg,var(--accent),#3e4ed3); color:white; padding:14px 28px; border-radius:999px; border:none; cursor:pointer; font-weight:700; box-shadow:0 12px 30px rgba(64,84,212,0.18); transition:transform .18s}
+  .btn-main:hover{transform:translateY(-4px)}
+  .btn-outline{background:transparent; color:white; border:2px solid rgba(255,255,255,0.22); padding:12px 22px; border-radius:999px; cursor:pointer}
+  .mini {margin-top:14px; display:flex; gap:10px; align-items:center; color:rgba(255,255,255,0.9)}
+  .portada-right {display:flex; flex-direction:column; align-items:center; gap:14px}
+  .cover-img{width:360px; height:240px; border-radius:12px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.4)}
+  .cover-img img{width:100%;height:100%;object-fit:cover; display:block}
+
+  /* animated logo pulse */
+  .logo-badge{width:84px;height:84px;border-radius:18px;overflow:hidden; display:flex;align-items:center;justify-content:center; margin-bottom:12px; box-shadow:0 10px 30px rgba(0,0,0,0.25)}
+  .logo-badge img{width:100%;height:100%;object-fit:cover}
+
+  /* ==== APP MAIN ==== */
+  .app {display:none; padding:28px 36px 80px; transition:opacity .5s}
+  .app.visible{display:block; animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+
+  header.topbar{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px}
+  .top-left{display:flex; align-items:center; gap:14px}
+  .avatar{width:56px;height:56px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center; font-weight:700; color:var(--accent); box-shadow:0 6px 18px rgba(12,30,80,0.08)}
+  .title{font-size:20px; font-weight:700}
+  .top-right{display:flex; gap:12px; align-items:center}
+
+  .toggle-theme{padding:8px 12px; border-radius:10px; border:none; cursor:pointer; background:linear-gradient(90deg,#fff, #f1f6ff)}
+  .btn-register{padding:8px 12px; border-radius:10px; border:none; background:var(--accent); color:#fff; cursor:pointer}
+
+  /* grid layout */
+  .layout{display:grid; grid-template-columns: 1fr 360px; gap:22px}
+  .dark .right-card, .dark .card{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); color:#e6eefc}
+  .card{background:var(--card); border-radius:12px; padding:18px; box-shadow:0 10px 30px rgba(7,12,26,0.06)}
+  .right-card{background:var(--card); padding:16px; border-radius:12px}
+
+  /* Agenda left */
+  .controls{display:flex; gap:12px; align-items:center}
+  .controls input, .controls select{padding:12px;border-radius:10px;border:1px solid #e6eefc; outline:none; width:100%}
+  .controls button{padding:10px 14px;border-radius:10px;border:none; background:var(--accent); color:#fff; cursor:pointer; font-weight:700}
+
+  .tabs{display:flex; gap:8px;}
+  .tab{padding:10px 14px; border-radius:9px; cursor:pointer; background:transparent; border:1px dashed #f0f3ff}
+  .tab.active{background:linear-gradient(90deg,var(--accent), #3e4ed3); color:white; border:0; box-shadow:0 8px 30px rgba(64,84,212,0.12)}
+
+  /* lists */
+  .list{margin-top:18px}
+  .note{padding:12px;border-radius:10px;background:#fbfdff;border:1px solid #eef4ff;margin-bottom:10px; display:flex; justify-content:space-between; gap:12px}
+  .note .meta{font-size:13px;color:var(--muted)}
+  .reminder{padding:12px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff); border:1px solid #eef4ff;margin-bottom:10px; display:flex; justify-content:space-between}
+
+  .small-muted{font-size:13px;color:var(--muted)}
+
+  /* right cards: table, gallery, qr */
+  table{width:100%; border-collapse:collapse; margin-top:8px}
+  th,td{padding:10px;border-bottom:1px solid #eef5ff;text-align:center}
+  th{background:var(--accent); color:white;border:0}
+  .gallery{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; justify-content:center}
+  .gallery img{width:100px; height:80px; object-fit:cover; border-radius:8px; cursor:pointer; transition:transform .18s}
+  .gallery img:hover{transform:translateY(-6px); box-shadow:0 12px 30px rgba(0,0,0,0.12)}
+
+  .qr-container{display:flex; gap:12px; align-items:center; justify-content:center; margin-top:12px}
+
+  /* calendar */
+  .calendar{margin-top:10px}
+  .cal-grid{display:grid; grid-template-columns: repeat(7,1fr); gap:6px; margin-top:10px}
+  .cal-cell{padding:10px; border-radius:8px; background:#fff; border:1px solid #eef4ff; min-height:74px; display:flex; flex-direction:column; justify-content:space-between}
+  .cal-cell .day{font-weight:700; font-size:14px}
+  .cal-cell .events{font-size:12px; margin-top:8px; color:var(--muted)}
+
+  /* modal small */
+  .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:999}
+  .modal .box{background:white; padding:18px; border-radius:12px; width:100%; max-width:680px; box-shadow:0 20px 60px rgba(0,0,0,0.3); max-height:80vh; overflow:auto}
+  .dark .modal .box{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); color:#e6eefc}
+
+  /* big events button styling */
+  .big-btn {display:inline-block; width:100%; padding:14px; border-radius:10px; font-weight:700; background:linear-gradient(90deg,var(--accent), #3e4ed3); color:#fff; border:none; cursor:pointer; margin-top:12px; box-shadow:0 12px 30px rgba(64,84,212,0.18)}
+  .events-list {margin-top:12px}
+  .events-item {padding:10px;border-radius:8px;border:1px solid #eef4ff;background:#fbfdff;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .events-item .meta{font-size:13px;color:var(--muted)}
+
+  /* small form styles in profile */
+  .profile-row{display:flex; gap:8px; align-items:center; margin-top:8px}
+  .profile-row input{padding:10px; border-radius:8px; border:1px solid #eef4ff; width:100%;}
+
+  /* responsive */
+  @media(max-width:1000px){
+    .layout{grid-template-columns:1fr}
+    .portada{flex-direction:column; padding:18px}
+    .cover-img{width:100%; height:200px}
+  }
+</style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<section class="view">
+  <div class="portada" id="portada">
+    <div class="portada-left">
+      <div class="logo-badge"><img id="logoBadge" src="oficina_moderna.jpg" alt="logo" onerror="this.src='https://images.unsplash.com/photo-1616627980355-31ef21e57c9b'"></div>
+      <h1>Agenda Pro — Tu Agenda Virtual</h1>
+      <p>Organizá tus notas, recordatorios y eventos con estilo. Modo claro/oscuro y sonido ambiental. Guardá todo en tu compu.</p>
+      <div class="cta">
+        <button class="btn-main" id="enterBtn">Entrar a la Agenda</button>
+        <button class="btn-outline" id="openRegisterBtn">Crear cuenta</button>
+      </div>
+      <div class="mini"><small class="small-muted">Música: </small><button class="btn-outline" id="audioBtn">▶️ Activar</button></div>
+    </div>
+    <div class="portada-right">
+      <div class="cover-img"><img src="laptop_cafe.jpg" alt="portada" onerror="this.src='https://images.unsplash.com/photo-1587613864505-0d9f4d2a6c1b'"></div>
+      <div class="small-muted">Tu espacio productivo — imágenes ya cargadas en la carpeta</div>
+    </div>
+  </div>
+</section>
+
+<!-- APP -->
+<main class="app" id="app">
+  <div class="wrap">
+    <header class="topbar">
+      <div class="top-left">
+        <div class="avatar" id="avatar">AG</div>
+        <div>
+          <div class="title" id="userTitle">Agenda Pro</div>
+          <div class="small-muted" id="userSub">Invitado • Iniciá sesión para guardar</div>
+        </div>
+      </div>
+      <div class="top-right">
+        <button class="toggle-theme" id="themeToggle">Modo oscuro</button>
+        <button class="btn-register" id="openReg2">Registrarse</button>
+        <button class="toggle-theme" id="logoutBtn" style="display:none">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <section class="layout">
+      <!-- LEFT: notes / reminders / calendar -->
+      <div>
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <h2 id="sectionTitle">Notas</h2>
+            <div>
+              <select id="viewSelect">
+                <option value="notes">Notas</option>
+                <option value="reminders">Recordatorios</option>
+                <option value="calendar">Calendario</option>
+                <option value="profile">Perfil</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- NOTES -->
+          <div id="notesView">
+            <div class="controls" style="margin-top:12px">
+              <input id="noteText" placeholder="Escribí una nota rápida...">
+              <button id="addNoteBtn">Agregar nota</button>
+            </div>
+            <div class="list" id="notesList"></div>
+          </div>
+
+          <!-- REMINDERS -->
+          <div id="remindersView" style="display:none">
+            <div class="controls" style="margin-top:12px">
+              <input id="remText" placeholder="Recordatorio...">
+              <input id="remDate" type="date" style="width:170px">
+              <button id="addRemBtn">Agregar</button>
+            </div>
+            <div class="list" id="remList"></div>
+          </div>
+
+          <!-- CALENDAR -->
+          <div id="calendarView" style="display:none">
+            <div style="display:flex; gap:10px; align-items:center; margin-top:12px">
+              <button id="prevMonth">◀️</button>
+              <div id="monthLabel" style="font-weight:700"></div>
+              <button id="nextMonth">▶️</button>
+            </div>
+            <div class="calendar">
+              <div class="cal-grid" id="calGrid"></div>
+            </div>
+            <div class="small-muted" style="margin-top:10px">Click en un día para agregar evento.</div>
+
+            <!-- AGREGADO: Botón grande para ver resumen - abre modal con notas, recordatorios y eventos -->
+            <button class="big-btn" id="openSummaryBtn">Ver todos: notas, recordatorios y eventos</button>
+          </div>
+
+          <!-- PROFILE -->
+          <div id="profileView" style="display:none">
+            <h3>Perfil</h3>
+            <div style="display:flex; gap:12px; align-items:center; margin-top:8px">
+              <div style="flex:1">
+                <input id="profileName" placeholder="Nombre">
+                <input id="profileEmail" placeholder="Email (ej: tunombre@gmail.com)" style="margin-top:8px">
+                <input id="profilePhone" placeholder="Teléfono (ej: +54911xxxxxxx)" style="margin-top:8px">
+                <input id="profileColor" type="color" value="#5563DE" style="margin-top:8px">
+                <button id="saveProfile" style="margin-top:8px">Guardar perfil</button>
+              </div>
+            </div>
+            <div class="hint small-muted" style="margin-top:10px">Los datos se guardan en tu navegador. Para enviar mails/SMS la app abrirá tu cliente de correo o app SMS.</div>
+          </div>
+
+        </div>
+
+        <!-- quick helper card -->
+        <div class="card" style="margin-top:14px">
+          <h3>Atajos</h3>
+          <ul style="margin-top:8px">
+            <li class="small-muted">Modo oscuro/claro</li>
+            <li class="small-muted">Crear cuenta para guardar por usuario</li>
+            <li class="small-muted">Usá el calendario para programar eventos</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- RIGHT: table, gallery, qr -->
+      <aside class="right-card card">
+        <div>
+          <div class="small-muted">Progreso</div>
+          <table id="progressTable">
+            <thead><tr><th>Día</th><th>Hechas</th><th>Pendientes</th></tr></thead>
+            <tbody>
+              <tr><td>Lunes</td><td>2</td><td>3</td></tr>
+              <tr><td>Martes</td><td>1</td><td>4</td></tr>
+              <tr><td>Miércoles</td><td>0</td><td>5</td></tr>
+            </tbody>
+          </table>
+
+          <div class="small-muted" style="margin-top:12px">Galería</div>
+          <div class="gallery" id="gallery">
+            <img src="trabajo_productivo.jpg" alt="g1" onerror="this.src='https://images.unsplash.com/photo-1504384308090-c894fdcc538d'">
+            <img src="escritorio_minimal.jpg" alt="g2" onerror="this.src='https://images.unsplash.com/photo-1616627980355-31ef21e57c9b'">
+            <img src="minimal_fondo1.jpg" alt="g3" onerror="this.src='https://images.unsplash.com/photo-1587613864505-0d9f4d2a6c1b'">
+          </div>
+
+          <div class="small-muted" style="margin-top:12px">QR de la app</div>
+          <div class="qr-container"><img id="qrImg" src="qr.png" alt="qr" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/8/8f/QR_Code_example.png'"></div>
+        </div>
+      </aside>
+    </section>
+  </div>
+</main>
+
+<!-- MODAL Register -->
+<div class="modal" id="modalReg">
+  <div class="box">
+    <h3>Crear cuenta</h3>
+    <input id="regU" placeholder="Usuario (único)">
+    <input id="regP" placeholder="Contraseña" type="password">
+    <input id="regName" placeholder="Nombre completo">
+    <div style="display:flex; gap:10px; margin-top:10px">
+      <button id="doRegister" class="btn-main">Crear</button>
+      <button id="closeReg" class="btn-outline">Cancelar</button>
+    </div>
+    <div class="small-muted" id="regMsg" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<!-- AGREGADO: Modal resumen con notas, recordatorios y eventos -->
+<div class="modal" id="modalSummary" aria-hidden="true">
+  <div class="box" role="dialog" aria-modal="true" aria-labelledby="summaryTitle">
+    <h3 id="summaryTitle">Resumen — Notas, Recordatorios y Eventos</h3>
+    <div style="display:flex; gap:12px; margin-top:8px; flex-wrap:wrap">
+      <button id="refreshSummary" class="btn-outline">Actualizar</button>
+      <button id="closeSummary" class="btn-main">Cerrar resumen</button>
+      <button id="sendSummaryEmail" class="btn-outline">Enviar por Mail</button>
+      <button id="sendSummarySMS" class="btn-outline">Enviar por SMS</button>
+    </div>
+
+    <h4 style="margin-top:14px">Notas</h4>
+    <div id="summaryNotes" class="events-list"></div>
+
+    <h4 style="margin-top:12px">Recordatorios</h4>
+    <div id="summaryRems" class="events-list"></div>
+
+    <h4 style="margin-top:12px">Eventos del Calendario</h4>
+    <div id="summaryCals" class="events-list"></div>
+
+    <div class="small-muted" style="margin-top:12px">Acciones: eliminar items o notificar ahora. Para envío real de mail/SMS se abrirá tu cliente con los datos prellenados.</div>
+  </div>
+</div>
+
+<!-- audio (no autoplay) -->
+<audio id="bgAudio" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+
+<script>
+  // --- helpers for localStorage user management
+  function usersObj(){ return JSON.parse(localStorage.getItem('agenda_users')||'{}'); }
+  function saveUsers(o){ localStorage.setItem('agenda_users', JSON.stringify(o)); }
+
+  function currentUser(){ return localStorage.getItem('agenda_session') || null; }
+  function setCurrentUser(u){ if(u) localStorage.setItem('agenda_session', u); else localStorage.removeItem('agenda_session'); }
+
+  // We wait DOMContentLoaded to ensure all elements exist before referencing them
+  document.addEventListener('DOMContentLoaded', function(){
+
+    // initial UI refs
+    const portada = document.getElementById('portada'), enterBtn = document.getElementById('enterBtn'), openRegisterBtn = document.getElementById('openRegisterBtn');
+    const app = document.getElementById('app'), themeToggle = document.getElementById('themeToggle'), openReg2 = document.getElementById('openReg2'), modalReg = document.getElementById('modalReg');
+    const closeReg = document.getElementById('closeReg'), doRegister = document.getElementById('doRegister');
+    const regU = document.getElementById('regU'), regP = document.getElementById('regP'), regName = document.getElementById('regName'), regMsg = document.getElementById('regMsg');
+    const avatar = document.getElementById('avatar'), userTitle = document.getElementById('userTitle'), userSub = document.getElementById('userSub'), logoutBtn = document.getElementById('logoutBtn');
+    const openRegisterBtn2 = document.getElementById('openRegisterBtn');
+    const audioBtn = document.getElementById('audioBtn'), bgAudio = document.getElementById('bgAudio');
+
+    // Notes / Reminders / Calendar refs
+    const viewSelect = document.getElementById('viewSelect'), sectionTitle = document.getElementById('sectionTitle');
+    const notesView = document.getElementById('notesView'), remindersView = document.getElementById('remindersView'), calendarView = document.getElementById('calendarView'), profileView = document.getElementById('profileView');
+    const noteText = document.getElementById('noteText'), addNoteBtn = document.getElementById('addNoteBtn'), notesList = document.getElementById('notesList');
+    const remText = document.getElementById('remText'), remDate = document.getElementById('remDate'), addRemBtn = document.getElementById('addRemBtn'), remList = document.getElementById('remList');
+    const calGrid = document.getElementById('calGrid'), monthLabel = document.getElementById('monthLabel'), prevMonth = document.getElementById('prevMonth'), nextMonth = document.getElementById('nextMonth');
+
+    // summary modal refs (AGREGADO)
+    const openSummaryBtn = document.getElementById('openSummaryBtn');
+    const modalSummary = document.getElementById('modalSummary');
+    const closeSummary = document.getElementById('closeSummary');
+    const refreshSummary = document.getElementById('refreshSummary');
+    const summaryNotes = document.getElementById('summaryNotes');
+    const summaryRems = document.getElementById('summaryRems');
+    const summaryCals = document.getElementById('summaryCals');
+    const sendSummaryEmail = document.getElementById('sendSummaryEmail');
+    const sendSummarySMS = document.getElementById('sendSummarySMS');
+
+    // profile inputs for contact
+    const profileNameInput = document.getElementById('profileName');
+    const profileEmailInput = document.getElementById('profileEmail');
+    const profilePhoneInput = document.getElementById('profilePhone');
+    const profileColorInput = document.getElementById('profileColor');
+    const saveProfileBtn = document.getElementById('saveProfile');
+
+    // theme
+    let dark = false;
+    function applyTheme(){ document.body.classList.toggle('dark', dark); themeToggle.textContent = dark? 'Modo claro' : 'Modo oscuro'; }
+    themeToggle.addEventListener('click', ()=>{ dark = !dark; applyTheme(); });
+
+    // audio
+    let audioOn = false;
+    audioBtn.addEventListener('click', ()=>{
+      if(!audioOn){ bgAudio.play().catch(()=>{}); audioBtn.textContent='⏸ Pausar'; audioOn=true; } else { bgAudio.pause(); audioBtn.textContent='▶️ Activar'; audioOn=false; }
+    });
+
+    // show register modal
+    function showReg(){ modalReg.style.display='flex'; }
+    function hideReg(){ modalReg.style.display='none'; regMsg.textContent=''; regU.value=''; regP.value=''; regName.value=''; }
+    openReg2.addEventListener('click', showReg); openRegisterBtn.addEventListener('click', showReg); closeReg.addEventListener('click', hideReg);
+
+    // create user
+    doRegister.addEventListener('click', ()=>{
+      const u = regU.value.trim(), p = regP.value, n = regName.value.trim();
+      if(!u || !p){ regMsg.textContent='Usuario y contraseña obligatorios'; return; }
+      const users = usersObj();
+      if(users[u]){ regMsg.textContent='Ese usuario ya existe'; return; }
+      users[u] = {pass:p, nombre:n||u, created:Date.now()};
+      saveUsers(users); regMsg.textContent='Cuenta creada ✔️'; setTimeout(()=>{ hideReg(); setCurrentUser(u); refreshUI(); },900);
+    });
+
+    // session UI
+    function refreshUI(){
+      const u = currentUser();
+      if(u){
+        const users = usersObj();
+        const me = users[u];
+        avatar.textContent = (me && me.nombre)? me.nombre.charAt(0).toUpperCase() : 'AG';
+        userTitle.textContent = (me && me.nombre)? me.nombre : u;
+        userSub.textContent = 'Sesión iniciada';
+        logoutBtn.style.display='inline-block';
+        // load stored profile into inputs (if exists)
+        if(me && me.profile){
+          profileNameInput.value = me.profile.name||'';
+          profileEmailInput.value = me.profile.email||'';
+          profilePhoneInput.value = me.profile.phone||'';
+          profileColorInput.value = me.profile.color||'#5563DE';
+        }
+      } else {
+        avatar.textContent = 'AG';
+        userTitle.textContent = 'Agenda Pro';
+        userSub.textContent = 'Invitado • Iniciá sesión para guardar';
+        logoutBtn.style.display='none';
+        // clear profile inputs
+        profileNameInput.value=''; profileEmailInput.value=''; profilePhoneInput.value=''; profileColorInput.value='#5563DE';
+      }
+      loadAllData();
+    }
+
+    // logout
+    logoutBtn.addEventListener('click', ()=>{ setCurrentUser(null); refreshUI(); });
+
+    // enter animation -> open app
+    enterBtn.addEventListener('click', ()=>{
+      portada.style.transition='opacity .7s'; portada.style.opacity='0';
+      setTimeout(()=>{ portada.style.display='none'; app.classList.add('visible'); app.style.display='block'; },700);
+    });
+
+    // view select switches
+    viewSelect.addEventListener('change', ()=>{
+      const val = viewSelect.value;
+      sectionTitle.textContent = val==='notes'? 'Notas' : val==='reminders'? 'Recordatorios' : val==='calendar'? 'Calendario' : 'Perfil';
+      notesView.style.display = val==='notes'? 'block' : 'none';
+      remindersView.style.display = val==='reminders'? 'block' : 'none';
+      calendarView.style.display = val==='calendar'? 'block' : 'none';
+      profileView.style.display = val==='profile'? 'block' : 'none';
+    });
+
+    // storage keys by user
+    function tasksKey(){ return 'agenda_notes_' + (currentUser()||'guest'); }
+    function remKey(){ return 'agenda_rems_' + (currentUser()||'guest'); }
+    function calKey(){ return 'agenda_cals_' + (currentUser()||'guest'); }
+    function userKey(){ return 'agenda_userdata_' + (currentUser()||'guest'); }
+
+    // notes
+    function loadNotes(){ return JSON.parse(localStorage.getItem(tasksKey())||'[]'); }
+    function saveNotes(arr){ localStorage.setItem(tasksKey(), JSON.stringify(arr)); }
+    function renderNotes(){ notesList.innerHTML=''; const arr = loadNotes(); arr.forEach((n,i)=>{ const div = document.createElement('div'); div.className='note'; div.innerHTML = `<div><div style="font-weight:700">${escapeHTML(n.text)}</div><div class="meta">${new Date(n.created).toLocaleString()}</div></div><div><button onclick="delNote(${i})" style="background:#ff5a5a;color:white;border-radius:8px;padding:8px;border:none;cursor:pointer">Eliminar</button></div>`; notesList.appendChild(div); }); }
+    window.delNote = function(i){ const a = loadNotes(); a.splice(i,1); saveNotes(a); renderNotes(); renderSummary(); };
+
+    addNoteBtn.addEventListener('click', ()=>{
+      const t = noteText.value.trim(); if(!t) return alert('Escribí algo'); const arr = loadNotes(); arr.unshift({text:t, created:Date.now()}); saveNotes(arr); noteText.value=''; renderNotes(); renderSummary();
+    });
+
+    // reminders
+    function loadRems(){ return JSON.parse(localStorage.getItem(remKey())||'[]'); }
+    function saveRems(a){ localStorage.setItem(remKey(), JSON.stringify(a)); }
+    function renderRems(){ remList.innerHTML=''; const a = loadRems(); a.forEach((r,i)=>{ const div = document.createElement('div'); div.className='reminder'; div.innerHTML = `<div><strong>${escapeHTML(r.text)}</strong><div class="meta">${r.date}${r.notified? ' • notificado' : ''}</div></div><div><button onclick="delRem(${i})" style="background:#ff5a5a;color:white;border-radius:8px;padding:8px;border:none;cursor:pointer">Eliminar</button></div>`; remList.appendChild(div); }); }
+    window.delRem = function(i){ const a = loadRems(); a.splice(i,1); saveRems(a); renderRems(); renderSummary(); }
+
+    addRemBtn.addEventListener('click', ()=>{
+      const t = remText.value.trim(); const d = remDate.value; if(!t||!d) return alert('completa texto y fecha'); const a = loadRems(); // ahora incluimos flag notified
+      a.unshift({text:t, date:d, created:Date.now(), notified:false}); saveRems(a); remText.value=''; remDate.value=''; renderRems(); renderSummary(); scheduleChecksImmediate();
+    });
+
+    // calendar
+    let now = new Date();
+    let calMonth = now.getMonth(), calYear = now.getFullYear();
+    function monthLabelText(m,y){ const months=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']; return `${months[m]} ${y}` }
+    prevMonth.addEventListener('click', ()=>{ calMonth--; if(calMonth<0){ calMonth=11; calYear--; } buildCalendar(); });
+    nextMonth.addEventListener('click', ()=>{ calMonth++; if(calMonth>11){ calMonth=0; calYear++; } buildCalendar(); });
+
+    function loadCals(){ return JSON.parse(localStorage.getItem(calKey())||'{}'); }
+    function saveCals(o){ localStorage.setItem(calKey(), JSON.stringify(o)); }
+
+    function buildCalendar(){
+      monthLabel.textContent = monthLabelText(calMonth, calYear);
+      calGrid.innerHTML='';
+      const first = new Date(calYear, calMonth, 1).getDay(); // 0..6 sunday
+      const days = new Date(calYear, calMonth+1, 0).getDate();
+      // pad blanks (make Monday as first? We'll keep Sunday first)
+      for(let i=0;i<first;i++){ const c = document.createElement('div'); c.className='cal-cell'; c.innerHTML=''; calGrid.appendChild(c); }
+      for(let d=1; d<=days; d++){
+        const c = document.createElement('div'); c.className='cal-cell'; c.innerHTML = `<div class="day">${d}</div><div class="events" id="events-${d}"></div>`; c.addEventListener('click', ()=>openAddEvent(d)); calGrid.appendChild(c);
+        // load events
+        const cals = loadCals();
+        const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        if(cals[key]){ const el = document.getElementById(`events-${d}`); if(el) el.textContent = cals[key].length + ' evento(s)'; }
+      }
+    }
+
+    function openAddEvent(day){
+      const title = prompt(`Agregar evento el ${day}/${calMonth+1}/${calYear}:\nEscribí el título (o cancel para no agregar)`);
+      if(title){ const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`; const o = loadCals(); if(!o[key]) o[key]=[]; o[key].push({title:title, created:Date.now()}); saveCals(o); buildCalendar(); renderSummary(); }
+    }
+
+    // util escape
+    function escapeHTML(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // QR generation (if qr.png is local it will show; else we update src to online chart)
+    function generateQR(){
+      const url = encodeURIComponent(location.href);
+      const chart = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${url}`;
+      const img = document.getElementById('qrImg');
+      // if qr.png exists locally, keep it; else use chart
+      fetch('qr.png', {method:'HEAD'}).then(res=>{ if(res.ok) return; else img.src = chart; }).catch(()=>{ img.src = chart; });
+    }
+
+    // initial load
+    function loadAllData(){
+      renderNotes(); renderRems(); buildCalendar(); generateQR();
+    }
+
+    /* ============================
+       Notifications scheduling & checks
+       - Request permission
+       - Periodically check reminders and notify if due
+       ============================ */
+
+    function initNotificationPermission(){
+      if(!('Notification' in window)) return;
+      if(Notification.permission === 'default') {
+        Notification.requestPermission().then(perm=>{ /* nothing more */ });
+      }
+    }
+
+    // IMPORTANT FIX:
+    // Declaramos la variable checkIntervalId ANTES de que se use dentro de init()
+    let checkIntervalId = null;
+
+    // one-time immediate check + interval
+    function scheduleChecksImmediate(){
+      if(checkIntervalId) clearInterval(checkIntervalId);
+      checkReminders(); // immediate
+      checkIntervalId = setInterval(checkReminders, 60 * 1000); // cada 60s
+    }
+
+    function checkReminders(){
+      const rems = loadRems();
+      if(!rems || rems.length===0) return;
+      const today = new Date();
+      const todayStr = today.toISOString().slice(0,10); // YYYY-MM-DD
+      let changed = false;
+      rems.forEach((r,i)=>{
+        if(!r.notified && r.date){
+          if(r.date <= todayStr){
+            showNotification('Recordatorio: ' + r.text, `Fecha: ${r.date}`);
+            r.notified = true;
+            changed = true;
+          }
+        }
+      });
+      if(changed) saveRems(rems);
+      renderRems(); renderSummary();
+    }
+
+    function showNotification(title, body){
+      try{
+        if('Notification' in window && Notification.permission === 'granted'){
+          new Notification(title, { body: body, icon: '' });
+        } else if('Notification' in window && Notification.permission !== 'denied'){
+          Notification.requestPermission().then(p=>{
+            if(p==='granted') new Notification(title, { body: body, icon: '' });
+          });
+        } else {
+          console.log('Notification fallback:', title, body);
+        }
+      }catch(e){ console.error(e); }
+    }
+
+    // autoload if session exists
+    (function init(){
+      // clickable gallery larger preview
+      document.querySelectorAll('.gallery img').forEach(img=>{
+        img.addEventListener('click', ()=>{ window.open(img.src, '_blank'); });
+      });
+      // hide modal on outside click handlers
+      if(modalReg){
+        modalReg.addEventListener('click', (e)=>{ if(e.target===modalReg) modalReg.style.display='none'; });
+      }
+      if(modalSummary){
+        modalSummary.addEventListener('click', (e)=>{ if(e.target===modalSummary) modalSummary.style.display='none'; });
+      }
+      // schedule notification checks
+      initNotificationPermission();
+      scheduleChecksImmediate();
+    })();
+
+    // keyboard shortcuts: N to notes, R reminders, C calendar, P profile
+    window.addEventListener('keydown',(e)=>{
+      if(e.key.toLowerCase()==='n'){ viewSelect.value='notes'; viewSelect.dispatchEvent(new Event('change')); }
+      if(e.key.toLowerCase()==='r'){ viewSelect.value='reminders'; viewSelect.dispatchEvent(new Event('change')); }
+      if(e.key.toLowerCase()==='c'){ viewSelect.value='calendar'; viewSelect.dispatchEvent(new Event('change')); }
+      if(e.key.toLowerCase()==='p'){ viewSelect.value='profile'; viewSelect.dispatchEvent(new Event('change')); }
+    });
+
+    // helper: load once theme pref
+    (function themePref(){ dark = (localStorage.getItem('agenda_theme')==='dark'); applyTheme(); })();
+    // remember theme change
+    themeToggle.addEventListener('click', ()=> localStorage.setItem('agenda_theme', dark?'dark':'light'));
+
+    // register via top-right button opens modal
+    openReg2.addEventListener('click', showReg); openRegisterBtn.addEventListener('click', showReg);
+
+    // save profile (incluye email y phone)
+    saveProfileBtn.addEventListener('click', ()=>{
+      const name = profileNameInput.value.trim(), email = profileEmailInput.value.trim(), phone = profilePhoneInput.value.trim(), color = profileColorInput.value;
+      const u = currentUser();
+      if(!u){ alert('Iniciá sesión o creá una cuenta para guardar perfil'); return; }
+      const users = usersObj(); if(!users[u]) users[u]={};
+      users[u].profile = {name,email,phone,color}; saveUsers(users); alert('Perfil guardado'); refreshUI();
+    });
+
+    // quick function to load saved profile into inputs when profile view opened
+    document.getElementById('viewSelect').addEventListener('change', ()=>{
+      if(viewSelect.value==='profile'){
+        const u = currentUser(); if(!u) return;
+        const users = usersObj(); const me = users[u];
+        if(me && me.profile){
+          document.getElementById('profileName').value = me.profile.name||'';
+          document.getElementById('profileEmail').value = me.profile.email||'';
+          document.getElementById('profilePhone').value = me.profile.phone||'';
+          document.getElementById('profileColor').value = me.profile.color||'#5563DE';
+        }
+      }
+    });
+
+    // initial UI refresh
+    refreshUI();
+    loadAllData();
+
+    /* ============================
+       AGREGADO: Modal resumen logic
+       - muestra notas, rems y cals guardados
+       - permite eliminar y marcar como notificado/completado
+       - permite enviar resumen por mail o sms (abre cliente)
+       ============================ */
+
+    // Safety: only attach if the button exists
+    if(openSummaryBtn && modalSummary){
+      openSummaryBtn.addEventListener('click', ()=>{
+        renderSummary();
+        modalSummary.style.display = 'flex';
+        modalSummary.setAttribute('aria-hidden','false');
+      });
+    } else {
+      // debug fallback: if not present, log (prevents script crash)
+      console.warn('openSummaryBtn o modalSummary no encontrados en DOM');
+    }
+
+    if(closeSummary){
+      closeSummary.addEventListener('click', ()=> {
+        modalSummary.style.display = 'none';
+        modalSummary.setAttribute('aria-hidden','true');
+      });
+    }
+
+    if(refreshSummary){
+      refreshSummary.addEventListener('click', renderSummary);
+    }
+
+    function renderSummary(){
+      // Notas
+      const notes = loadNotes();
+      summaryNotes.innerHTML = '';
+      if(!notes || notes.length===0) summaryNotes.innerHTML = '<div class="small-muted">No hay notas.</div>';
+      else notes.forEach((n,i)=>{
+        const div = document.createElement('div');
+        div.className = 'events-item';
+        div.innerHTML = `<div><div style="font-weight:700">${escapeHTML(n.text)}</div><div class="meta">${new Date(n.created).toLocaleString()}</div></div>
+          <div>
+            <button style="margin-right:6px" onclick="summaryDeleteNote(${i})">Eliminar</button>
+          </div>`;
+        summaryNotes.appendChild(div);
+      });
+
+      // Recordatorios
+      const rems = loadRems();
+      summaryRems.innerHTML = '';
+      if(!rems || rems.length===0) summaryRems.innerHTML = '<div class="small-muted">No hay recordatorios.</div>';
+      else rems.forEach((r,i)=>{
+        const div = document.createElement('div');
+        div.className = 'events-item';
+        div.innerHTML = `<div><div style="font-weight:700">${escapeHTML(r.text)}</div><div class="meta">${r.date}${r.notified? ' • notificado' : ''}</div></div>
+          <div>
+            <button style="margin-right:6px" onclick="summaryNotifyRem(${i})">${r.notified? 'Notificado' : 'Notificar ahora'}</button>
+            <button onclick="summaryDeleteRem(${i})">Eliminar</button>
+          </div>`;
+        summaryRems.appendChild(div);
+      });
+
+      // Eventos calendario
+      const cals = loadCals();
+      const keys = Object.keys(cals).sort();
+      summaryCals.innerHTML = '';
+      if(!keys || keys.length===0) summaryCals.innerHTML = '<div class="small-muted">No hay eventos en el calendario.</div>';
+      else keys.forEach(k=>{
+        const items = cals[k];
+        items.forEach((ev,i)=>{
+          const div = document.createElement('div');
+          div.className = 'events-item';
+          div.innerHTML = `<div><div style="font-weight:700">${escapeHTML(ev.title)}</div><div class="meta">${k}</div></div>
+            <div>
+              <button style="margin-right:6px" onclick="summaryDeleteCal('${k}', ${i})">Eliminar</button>
+            </div>`;
+          summaryCals.appendChild(div);
+        });
+      });
+    }
+
+    // funciones de resumen accesibles en el scope global
+    window.summaryDeleteNote = function(i){
+      const a = loadNotes(); a.splice(i,1); saveNotes(a); renderNotes(); renderSummary();
+    }
+    window.summaryDeleteRem = function(i){
+      const a = loadRems(); a.splice(i,1); saveRems(a); renderRems(); renderSummary();
+    }
+    window.summaryDeleteCal = function(key, idx){
+      const o = loadCals(); if(!o[key]) return; o[key].splice(idx,1); if(o[key].length===0) delete o[key]; saveCals(o); buildCalendar(); renderSummary();
+    }
+    window.summaryNotifyRem = function(i){
+      const a = loadRems();
+      if(!a[i]) return;
+      showNotification('Recordatorio', a[i].text);
+      a[i].notified = true;
+      saveRems(a);
+      renderRems(); renderSummary();
+      // además abrimos mailto o sms si el usuario tiene contacto guardado
+      const u = currentUser(); const users = usersObj(); const me = users[u];
+      const body = `Recordatorio: ${a[i].text} • Fecha: ${a[i].date}`;
+      if(me && me.profile && me.profile.email){
+        const mailto = `mailto:${encodeURIComponent(me.profile.email)}?subject=${encodeURIComponent('Recordatorio desde Agenda Pro')}&body=${encodeURIComponent(body)}`;
+        window.open(mailto, '_blank');
+      } else if(me && me.profile && me.profile.phone){
+        const sms = `sms:${encodeURIComponent(me.profile.phone)}?body=${encodeURIComponent(body)}`;
+        window.open(sms, '_blank');
+      }
+    }
+
+    // enviar resumen por mail (abre cliente con todo el contenido)
+    if(sendSummaryEmail){
+      sendSummaryEmail.addEventListener('click', ()=>{
+        const u = currentUser(); const users = usersObj(); const me = users[u];
+        const notes = loadNotes(), rems = loadRems(), cals = loadCals();
+        let body = 'Resumen desde Agenda Pro:%0A%0A';
+        if(notes.length){
+          body += 'Notas:%0A';
+          notes.forEach(n=> body += `- ${n.text} (${new Date(n.created).toLocaleString()})%0A`);
+          body += '%0A';
+        }
+        if(rems.length){
+          body += 'Recordatorios:%0A';
+          rems.forEach(r=> body += `- ${r.text} (fecha: ${r.date})${r.notified? ' [notificado]':''}%0A`);
+          body += '%0A';
+        }
+        const keys = Object.keys(cals).sort();
+        if(keys.length){
+          body += 'Eventos:%0A';
+          keys.forEach(k=> cals[k].forEach(ev=> body += `- ${ev.title} (fecha: ${k})%0A`));
+          body += '%0A';
+        }
+        const target = (me && me.profile && me.profile.email) ? me.profile.email : '';
+        const mailto = `mailto:${encodeURIComponent(target)}?subject=${encodeURIComponent('Resumen Agenda Pro')}&body=${body}`;
+        window.open(mailto, '_blank');
+      });
+    }
+
+    // enviar resumen por SMS (abre app SMS en móvil)
+    if(sendSummarySMS){
+      sendSummarySMS.addEventListener('click', ()=>{
+        const u = currentUser(); const users = usersObj(); const me = users[u];
+        const notes = loadNotes(), rems = loadRems(), cals = loadCals();
+        let body = 'Resumen: ';
+        if(notes.length) body += `Notas(${notes.length}) `;
+        if(rems.length) body += `Rems(${rems.length}) `;
+        const keys = Object.keys(cals).length;
+        if(keys) body += `Events(${keys})`;
+        const target = (me && me.profile && me.profile.phone) ? me.profile.phone : '';
+        const sms = `sms:${encodeURIComponent(target)}?body=${encodeURIComponent(body)}`;
+        window.open(sms, '_blank');
+      });
+    }
+
+    // Expose some helpers for debugging
+    window._ls = { loadNotes, saveNotes, loadRems, saveRems, loadCals, saveCals, usersObj, saveUsers };
+
+  }); // end DOMContentLoaded
+</script>
+</body>
+</html>
